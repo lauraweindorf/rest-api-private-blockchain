@@ -1,13 +1,23 @@
 # RESTful Blockchain API - Udacity Project
 
-Implements a simple private blockchain API with the following API endpoints. The blockchain is initially populated with the Genesis block
-on startup.
+IN PROGRESS!
+
+Implements a simple private blockchain API with the endpoints below. 
+
+The blockchain is initially populated with the Genesis block on startup.
 
 This project uses the Hapi.js NodeJS framework. More info: https://hapijs.com
 
-## GET localhost:8000/block/{index}
+Packages:
+- hapijs
+- cryptojs
+- boom
 
-### Example request of GET localhost:8000/block/0 returns a JSON Block object as:
+## GET http://localhost:8000/block/{index}
+
+### Example JSON response for:
+
+	GET http://localhost:8000/block/0
 
 ```
 {
@@ -19,9 +29,13 @@ This project uses the Hapi.js NodeJS framework. More info: https://hapijs.com
 }
 ```
 
-## POST localhost:8000/block
+## POST http://localhost:8000/block
 
-body: <block data string>
+```
+{
+	"body":	"data"
+}
+```
 
 ### Example: 
 
@@ -33,7 +47,7 @@ body: <block data string>
 
 ## Steps
 
-1. Clone the repository to your local computer.
+1. Clone the repository.
 2. Open the terminal and install the packages: `npm install`.
 4. Run the application `node app.js`
 5. Use Curl or Postman to try out the endpoints.
