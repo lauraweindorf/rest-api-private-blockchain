@@ -1,6 +1,6 @@
 # RESTful Blockchain API - Udacity Project
 
-IN PROGRESS!
+// Adapted from Jose Perera Morales' Udacity project: udacity/nd1309-rest-api-hapi
 
 Implements a simple private blockchain API with the endpoints below. 
 
