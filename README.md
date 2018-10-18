@@ -9,13 +9,13 @@ The blockchain is initially populated with the Genesis block on startup.
 This project uses the Hapi.js NodeJS framework. More info: https://hapijs.com
 
 Packages:
-- hapijs
-- cryptojs
-- boom
+- hapi
+- crypto-js/sha256
+- Boom
 
 ## GET http://localhost:8000/block/{index}
 
-### Example JSON response for:
+### Example JSON response:
 
 	GET http://localhost:8000/block/0
 
