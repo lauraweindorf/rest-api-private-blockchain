@@ -1,5 +1,3 @@
-<<<<<<< HEAD
-=======
 # RESTful Blockchain API - Udacity Project
 
 `// Adapted from Jose Perera Morales' Udacity project: https://github.com/udacity/nd1309-rest-api-hapi`
@@ -53,4 +51,3 @@ Packages:
 2. Open the terminal and install the packages: `npm install`.
 4. Run the application `node app.js`
 5. Use Curl or Postman to try out the endpoints.
->>>>>>> 28bb84210725da8ce3fbba6759e558ec3810bc07
