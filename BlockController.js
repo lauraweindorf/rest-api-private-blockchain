@@ -25,7 +25,7 @@ class BlockController {
     getBlockByIndex() {
         this.server.route({
             method: 'GET',
-            path: '/api/block/{index}',
+            path: '/block/{index}',
             handler: (request, reply) => {
  				try {
 					let block = this.blocks[request.params.index];
@@ -48,7 +48,7 @@ class BlockController {
     postNewBlock() {
         this.server.route({
             method: 'POST',
-            path: '/api/block',
+            path: '/block',
             handler: (request, reply) => {
 
 				if (request.payload === undefined || request.payload.body === undefined)
