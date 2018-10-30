@@ -1,4 +1,19 @@
+/* ===== SHA256 with Crypto-js ===============================
+|  Learn more: Crypto-js: https://github.com/brix/crypto-js  |
+|  =========================================================*/
+
 const SHA256 = require('crypto-js/sha256');
+
+/* ===== Configure to use LevelDB as the data access layer  ================= */
+
+const level = require('level');
+const privateBlockchain = './private-blockchain';
+const db = level(privateBlockchain);
+
+/* ===== RESTful API Project stuff ===== */
+
+const GENESIS = 'rest-api-private-blockchain Udacity Project - Genesis block';
+
 const BlockClass = require('./Block.js');
 const boom = require('Boom');
 
@@ -9,35 +24,58 @@ class BlockController {
 
     /**
      * Constructor to create a new BlockController, you need to initialize here all your endpoints
-     * @param {*} server 
+     * @param {*} server
      */
-    constructor(server) {
+    constructor(server)
+    {
         this.server = server;
-        this.blocks = [];
-        this.initializeMockData();
+        this.ensureGenesisBlock();
         this.getBlockByIndex();
         this.postNewBlock();
     }
 
+    // Adds the genesis block if it doesn't already exist
+    async ensureGenesisBlock()
+  	{
+      try {
+        let blockHeight = await this.getBlockHeight();
+        if (blockHeight === -1) {
+          // Create the genesis block
+          var genesis = new BlockClass.Block(GENESIS);
+          genesis.hash = SHA256(JSON.stringify(genesis)).toString();
+
+          await this.putBlock(0, genesis);
+          blockHeight++;
+
+          console.log(genesis.toLogString('GENESIS Block added!'));
+        } else {
+          console.log(`BlockHeight = ${blockHeight}`);
+        }
+
+        return blockHeight;
+
+      } catch (err) {
+        console.log(`FATAL. Can't add genesis block to blockchain: ${err.message}`);
+        return boom.badImplementation();
+      }
+  	}
+
     /**
      * Implement a GET Endpoint to retrieve a block by index, url: "/api/block/:index"
      */
-    getBlockByIndex() {
+    getBlockByIndex()
+    {
         this.server.route({
             method: 'GET',
             path: '/block/{index}',
-            handler: (request, reply) => {
- 				try {
-					let block = this.blocks[request.params.index];
+            handler: async (request, reply) => {
+              try {
+                let block = await this.getBlock(request.params.index);
+                return block;
 
-					if (block === undefined)
-						throw new boom.badRequest(`Invalid block index: ${index}`);		// 400
-
-					return block;
-
-				} catch(err) {
-					throw new Error(err.message);	// 500
-				}              
+              } catch(err) {
+                return boom.badRequest(`Invalid block index: ${request.params.index}`);		// 400
+              }
             }
         });
     }
@@ -45,70 +83,113 @@ class BlockController {
     /**
      * Implement a POST Endpoint to add a new Block, url: "/api/block"
      */
-    postNewBlock() {
+    postNewBlock()
+    {
         this.server.route({
             method: 'POST',
             path: '/block',
-            handler: (request, reply) => {
+            handler: async (request, reply) => {
 
-				if (request.payload === undefined || request.payload.body === undefined)
-					return boom.badRequest(`Invalid request payload: ${request.payload}`);	//400
+              if (request.payload === undefined || request.payload.body === undefined) {
+                return boom.badRequest(`Invalid request payload: ${request.payload}`);	//400
+              }
 
-				let body = request.payload.body.trim();
-				if (body.length === 0)
-					return boom.badRequest('Invalid request payload: EMPTY');	// 400
+              let body = request.payload.body.trim();
+        			if (body.length === 0) {
+                return boom.badRequest('Invalid request payload: EMPTY');	// 400
+              }
 
-				console.log(`POST block data: ${body}`);
-            
             	try {
-                	let blockAux = new BlockClass.Block();
-                	blockAux.body = body;
-                	blockAux.height = this.blocks.length;
-                	blockAux.hash = SHA256(JSON.stringify(blockAux)).toString();
-                	blockAux.previousBlockHash = this.blocks[this.blocks.length - 1].hash;
-                
-                	this.blocks.push(blockAux);
-                
-                	console.log(`New Block created at height: ${blockAux.height}`);
-                	console.log(`${JSON.stringify(blockAux)}`);
-                
-                	return blockAux;
 
-            	} catch (err) {
-                	throw new Error(err.message);	// 500
+                let blockAux = new BlockClass.Block();
+                blockAux.body = body;
+
+                await this.addBlock(blockAux);
+
+                console.log(`New Block created at height: ${blockAux.height}`);
+                console.log(`${JSON.stringify(blockAux)}`);
+
+                return blockAux;
+
+              } catch (err) {
+                	return boom.badImplementation(err.message);	// 500
             	}
             }
         });
     }
 
-    /**
-     * Help method to inizialized Mock dataset, adds 10 test blocks to the blocks array
-     */
-	initializeMockData()
+    // Appends a block to the blockchain
+    async addBlock(block)
     {
-        if(this.blocks.length === 0) {
-            for (let index = 0; index < 10; index++) {
+      try {
+        // Make sure GENESIS block gets added
+        let blockHeight = await this.ensureGenesisBlock();
+        let latestBlock = await this.getBlock(blockHeight);
 
-                let blockAux = new BlockClass.Block();
+        block.height = blockHeight + 1;
+        block.previousBlockHash = latestBlock.hash;
+        block.hash = SHA256(JSON.stringify(block)).toString();
 
-                blockAux.height = index;
-                blockAux.hash = SHA256(JSON.stringify(blockAux)).toString();
+        // Persisting block object to levelDB
+        await this.putBlock(block.height, block);
 
-                if (index === 0) {
-                    blockAux.body = 'First block in the chain - Genesis block';
-                } else {
-                    blockAux.body = `Test Data #${index}`;
-                    blockAux.previousBlockHash = this.blocks[this.blocks.length - 1].hash;
-                }
+      } catch (err) {
+        throw new Error(`unable to add new block: ${err.message}`);
+      }
+    }
 
-                this.blocks.push(blockAux);
-            }
-        }
+    //
+    // LevelDB Data Access layer
+    //
+
+    // Get current block height of simpleChain
+    getBlockHeight()
+    {
+      return new Promise((resolve, reject) => {
+    		let blockHeight = -1;
+    		db.createKeyStream()
+    				.on('data', (data) => {
+    					blockHeight++;
+    				}).on('error', (err) => {
+    					reject(`getBlockHeight: ${err.message}`);
+    				}).on('close', () => {
+              resolve(blockHeight);
+    				});
+    	});
+    }
+
+    // Get block at blockHeight value
+    getBlock(blockHeight)
+    {
+      return new Promise((resolve, reject) => {
+    		db.get(blockHeight)
+    			.then((blockValue) => {
+    				resolve(JSON.parse(blockValue));
+    			}).catch((errmsg) => {
+    				reject(`getBlock: ${errmsg}`);
+    			});
+    		});
+    }
+
+    // Put block data
+    putBlock(blockHeight, block)
+    {
+      let blockValue = JSON.stringify(block);
+
+      return new Promise((resolve, reject) => {
+        db.put(blockHeight, blockValue)
+          .then(() => {
+            resolve();
+          })
+          .catch((errmsg) => {
+            reject(`db.put: ${errmsg}`);
+          });
+      });
     }
 }
 
 /**
  * Exporting the BlockController class
- * @param {*} server 
+ * @param {*} server
  */
-module.exports = (server) => { return new BlockController(server);}
+module.exports = (server) => { return new BlockController(server) }
