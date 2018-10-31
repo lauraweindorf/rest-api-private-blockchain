@@ -38,13 +38,13 @@ Use curl or Postman to try out the endpoints.
 
 #### CURL Examples
 
-Get Block #1 in private-blockchain
+Get Block 0 (Genesis block)
 
 ```
 curl "http://localhost:8000/block/1"
 ```
 
-Add Block to private-blockchain
+Add Block
 
 ```
 curl -X "POST" "http://localhost:8000/block" -H "Content-Type: application/json" -d "{\"body\":\"block-1\"}"
