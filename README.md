@@ -23,7 +23,7 @@ git clone [repo]
 Open a command or terminal window and install the packages.
 
 ```
-npm Installing
+npm install
 ```
 
 ### Running
@@ -35,10 +35,6 @@ npm start
 ```
 
 Use curl or Postman to try out the endpoints.
-
-2. Open the terminal and install the packages: `npm install`.
-4. Run the application `npm start`
-5. Use Curl or Postman to try out the endpoints.
 
 #### CURL Examples
 
