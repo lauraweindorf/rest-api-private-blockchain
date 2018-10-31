@@ -26,18 +26,35 @@ Open a command or terminal window and install the packages.
 npm Installing
 ```
 
+### Running
+
 Start the app or Hapi server (listening on localhost:8000).
 
 ```
-node app.js
+npm start
 ```
 
 Use curl or Postman to try out the endpoints.
 
 2. Open the terminal and install the packages: `npm install`.
-4. Run the application `node app.js`
+4. Run the application `npm start`
 5. Use Curl or Postman to try out the endpoints.
 
+#### CURL Examples
+
+Get Block #1 in private-blockchain
+
+```
+curl "http://localhost:8000/block/1"
+```
+
+Add Block to private-blockchain
+
+```
+curl -X "POST" "http://localhost:8000/block" -H "Content-Type: application/json" -d "{\"body\":\"block-1\"}"
+```
+
+### API Endpoints
 
 #### GET http://localhost:8000/block/{index}
 
