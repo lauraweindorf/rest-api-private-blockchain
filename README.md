@@ -41,7 +41,7 @@ Use curl or Postman to try out the endpoints.
 Get Block 0 (Genesis block)
 
 ```
-curl "http://localhost:8000/block/1"
+curl "http://localhost:8000/block/0"
 ```
 
 Add Block
